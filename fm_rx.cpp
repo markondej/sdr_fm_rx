@@ -80,7 +80,7 @@ const double lowpass_filter_coeffs[] = {
 	-0.000669539605565494,
 };
 
-/* Audio lowpass filter, sampling_rate=240KHz, cutoff_freq=14KHz */
+/* Audio lowpass filter, sampling_rate=240KHz, cutoff_freq=15KHz */
 const double audio_filter_coeffs[] {
 	0.000305506150543321,
 	0.000171204436579448,
