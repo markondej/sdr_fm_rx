@@ -37,7 +37,7 @@
 
 #define ARRAY_LENGTH(_x) (sizeof(_x) / sizeof((_x)[0]))
 
-/* Low-pass filter, sampling_rate=2.4Mhz, cutoff_freq=200KHz */
+/* Low-pass filter, sampling_rate=2.4Mhz, cutoff_freq=120KHz */
 const double lowpass_filter_coeffs[] = {
 	-0.000223854182109267,
 	-0.0006530797808749944,
@@ -846,4 +846,5 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
+
 }
