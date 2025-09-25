@@ -20,7 +20,7 @@
 #define GHZ(x) (static_cast<long long>(x * 1000000000. + .5))
 
 #define AUDIO_SAMPLE_RATE 48000
-#define AUDIO_CHANNEL_BITS 8
+#define AUDIO_SAMPLE_BITS 8
 
 #define ALSA_PERIOD_DURATION_MS 50
 #define ALSA_BUFFER_PERIODS 8
@@ -832,7 +832,7 @@ int main(int argc, char** argv) {
 		Deemphasis deemp(AUDIO_SAMPLE_RATE, 50. / 1000000.);
 
 		Speaker speaker;
-		speaker.Enable(speaker_dev, AUDIO_SAMPLE_RATE, 1, AUDIO_CHANNEL_BITS);
+		speaker.Enable(speaker_dev, AUDIO_SAMPLE_RATE, 1, AUDIO_SAMPLE_BITS);
 
 		while (!stop) {
 			radio.Poll();
@@ -842,7 +842,7 @@ int main(int argc, char** argv) {
 			deemp.Process(audio_lowpass.GetSinkBuffer());
 			if (!speaker.GetError().empty())
 				throw std::runtime_error(speaker.GetError());
-			speaker.Consume(deemp.GetSinkBuffer(), AUDIO_CHANNEL_BITS);
+			speaker.Consume(deemp.GetSinkBuffer(), AUDIO_SAMPLE_BITS);
 		}
 	} catch (std::exception &error) {
 		std::cerr << error.what() << std::endl;
@@ -851,5 +851,6 @@ int main(int argc, char** argv) {
 	return EXIT_SUCCESS;
 
 }
+
 
 
