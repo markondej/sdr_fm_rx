@@ -705,6 +705,7 @@ wait:
 template <typename T>
 class FIR_Filter : public Entity<T> {
 public:
+	FIR_Filter() = delete;
 	FIR_Filter(const double coefficients[], std::size_t coeffs_size, std::size_t decimate = 1, std::size_t sink_length = SAMPLES) : Entity<T>(sink_length), coefficients(coefficients), coeffs_size(coeffs_size), decimate(decimate) { }
 	std::size_t Process(RingBuffer<T> &source) {
 		std::size_t count = 0;
@@ -729,6 +730,7 @@ private:
 
 class FM_Demodulator : public Entity<double> {
 public:
+	FM_Demodulator() = delete;
 	FM_Demodulator(uint32_t sampling_rate, uint32_t bandwidth = MHZ(0.2), std::size_t sink_length = SAMPLES) : Entity(sink_length), sampling_rate(sampling_rate), bandwidth(bandwidth) { }
 	std::size_t Process(RingBuffer<std::complex<double>> &source) {
 		std::size_t count = 0;
@@ -760,6 +762,7 @@ private:
 
 class Deemphasis : public Entity<double> {
 public:
+	Deemphasis() = delete;
 	Deemphasis(uint32_t sampling_rate, double tau, std::size_t sink_length = SAMPLES) : Entity(sink_length), prev(0.) {
 		double T = 1. / static_cast<double>(sampling_rate);
 		alpha = T / (tau + T);
@@ -848,4 +851,5 @@ int main(int argc, char** argv) {
 	return EXIT_SUCCESS;
 
 }
+
 
