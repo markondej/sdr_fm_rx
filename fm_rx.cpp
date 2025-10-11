@@ -497,7 +497,7 @@ public:
 	}
 	bool Disable() {
 		std::unique_lock<std::mutex> lock(access);
-		if (enabled) {
+		if (thread.joinable() && enabled) {
 			enabled = false;
 			lock.unlock();
 			thread.join();
@@ -851,6 +851,7 @@ int main(int argc, char** argv) {
 	return EXIT_SUCCESS;
 
 }
+
 
 
 
