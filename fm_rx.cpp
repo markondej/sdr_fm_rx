@@ -737,19 +737,9 @@ public:
 		while ((source.GetDataLength() >= 2) && sink.GetFree()) {
 			std::complex<double> *s1 = &source[source.GetTailIndex()],
 				*s2 = &source[source.GetTailIndex() + 1];
-
-			double a1 = (s1->imag() != 0.0) ? ((s1->real() != 0.0) ? atan(s1->imag() / s1->real()) : std::copysign(M_PI, s1->imag()) / 2.0) : 0.0;
-			if (s1->real() < 0.0)
-				a1 = std::copysign(M_PI, s1->imag()) + a1;
-
-			double a2 = (s2->imag() != 0.0) ? ((s2->real() != 0.0) ? atan(s2->imag() / s2->real()) : std::copysign(M_PI, s2->imag()) / 2.0) : 0.0;
-			if (s2->real() < 0.0)
-				a2 = std::copysign(M_PI, s2->imag()) + a2;
-
 			source.MoveTailIndex(1);
 
-			double delta = a2 - a1;
-			delta += (delta > M_PI) ? -2. * M_PI : (delta < -M_PI) ? 2. * M_PI : 0.;
+			double delta = std::arg(s2 * std::conj(s1));
 			sink.GetHead() = delta * sampling_rate / (2. * M_PI * static_cast<double>(bandwidth >> 1));
 			sink.MoveHeadIndex(1);
 			count++;
@@ -851,6 +841,7 @@ int main(int argc, char** argv) {
 	return EXIT_SUCCESS;
 
 }
+
 
 
 
