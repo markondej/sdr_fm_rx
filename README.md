@@ -30,14 +30,14 @@ make RTLSDR=1
 
 Example: receive 101.2 MHz FM broadcast:
 ```
-./fm_rx -f 101200000
+./fm_rx -f 101.2
 ```
 
 You should hear the demodulated audio through your PC speakers.
 
 ## Parameters
 
-* `-f` — Center frequency in Hz, e.g. `101200000` for 101.2 MHz
+* `-f` — Center frequency in Hz, e.g. `101.2` for 101.2 MHz
 * `-d` — SDR device
   * Default for RTL-SDR: `0`, uses device index
   * Default for Pluto: `ip:192.168.2.1`

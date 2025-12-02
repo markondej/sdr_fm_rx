@@ -739,8 +739,8 @@ public:
 				*s2 = &source[source.GetTailIndex() + 1];
 			source.MoveTailIndex(1);
 
-			double delta = std::arg(s2 * std::conj(s1));
-			sink.GetHead() = delta * sampling_rate / (2. * M_PI * static_cast<double>(bandwidth >> 1));
+			double diff = std::arg((*s2) * std::conj(*s1));
+			sink.GetHead() = diff * sampling_rate / (2. * M_PI * static_cast<double>(bandwidth >> 1));
 			sink.MoveHeadIndex(1);
 			count++;
 		}
@@ -838,11 +838,6 @@ int main(int argc, char** argv) {
 		std::cerr << error.what() << std::endl;
 		return EXIT_FAILURE;
 	}
+
 	return EXIT_SUCCESS;
-
 }
-
-
-
-
-
