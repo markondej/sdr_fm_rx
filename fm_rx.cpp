@@ -216,6 +216,7 @@ public:
 		this->data_length = source.data_length;
 		this->data = new T[length];
 		std::memcpy(this->data, source.data, this->length);
+		return *this;
 	}
 	virtual ~RingBuffer() {
 		delete [] data;
