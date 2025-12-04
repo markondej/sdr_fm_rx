@@ -1,4 +1,4 @@
-# Simple FM Audio Demodulator
+# Simple SDR FM Audio Demodulator
 This simple FM audio demodulator is designed for use with SDR platforms such as **ADALM-Pluto** or **RTL-SDR**. It is a console-only application.
 
 ## Dependencies
