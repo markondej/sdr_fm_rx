@@ -278,12 +278,12 @@ template <typename T>
 class Entity {
 	public:
 		Entity() = delete;
-		Entity(std::size_t sink_length) : sink(sink_length) { }
-		RingBuffer<T> &GetSinkBuffer() {
-			return sink;
+		Entity(std::size_t buffer_length) : buffer(buffer_length) { }
+		RingBuffer<T> &GetBuffer() {
+			return buffer;
 		}
 	protected:
-		RingBuffer<T> sink;
+		RingBuffer<T> buffer;
 };
 
 class SDR_RX : public Entity<std::complex<double>> {
@@ -431,12 +431,12 @@ close_dev:
 		ptrdiff_t p_inc = iio_buffer_step(rx_buf);
 		char *p_end = reinterpret_cast<char *>(iio_buffer_end(rx_buf));
 		for (char *p_dat = reinterpret_cast<char *>(iio_buffer_first(rx_buf, rx_ch_i)); p_dat < p_end; p_dat += p_inc) {
-			if (sink.GetFree() <= i)
+			if (buffer.GetFree() <= i)
 				break;
 			const int16_t ii = (reinterpret_cast<int16_t *>(p_dat))[0];
 			const int16_t iq = (reinterpret_cast<int16_t *>(p_dat))[1];
-			sink[sink.GetHeadIndex() + i].real(ii / static_cast<double>(SHRT_MAX));
-			sink[sink.GetHeadIndex() + i].imag(iq / static_cast<double>(SHRT_MAX));
+			buffer[buffer.GetHeadIndex() + i].real(ii / static_cast<double>(SHRT_MAX));
+			buffer[buffer.GetHeadIndex() + i].imag(iq / static_cast<double>(SHRT_MAX));
 			i++;
 		}
 #else
@@ -447,14 +447,14 @@ close_dev:
 
 		std::size_t i;
 		for (i = 0; i < static_cast<std::size_t>(bytes_read >> 1); i++) {
-			if (sink.GetFree() <= i)
+			if (buffer.GetFree() <= i)
 				break;
-			sink[sink.GetHeadIndex() + i].real(static_cast<double>(temp[(i << 1) + 0]) / 127.5 - 1.0);
-			sink[sink.GetHeadIndex() + i].imag(static_cast<double>(temp[(i << 1) + 1]) / 127.5 - 1.0);
+			buffer[buffer.GetHeadIndex() + i].real(static_cast<double>(temp[(i << 1) + 0]) / 127.5 - 1.0);
+			buffer[buffer.GetHeadIndex() + i].imag(static_cast<double>(temp[(i << 1) + 1]) / 127.5 - 1.0);
 		}
 #endif
 
-		sink.MoveHeadIndex(i);
+		buffer.MoveHeadIndex(i);
 
 		return i;
 	}
@@ -707,10 +707,10 @@ template <typename T>
 class FIR_Filter : public Entity<T> {
 public:
 	FIR_Filter() = delete;
-	FIR_Filter(const double coefficients[], std::size_t coeffs_size, std::size_t decimate = 1, std::size_t sink_length = SAMPLES) : Entity<T>(sink_length), coefficients(coefficients), coeffs_size(coeffs_size), decimate(decimate) { }
+	FIR_Filter(const double coefficients[], std::size_t coeffs_size, std::size_t decimate = 1, std::size_t buffer_length = SAMPLES) : Entity<T>(buffer_length), coefficients(coefficients), coeffs_size(coeffs_size), decimate(decimate) { }
 	std::size_t Process(RingBuffer<T> &source) {
 		std::size_t count = 0;
-		while (source.GetDataLength() >= std::max(coeffs_size, decimate) && Entity<T>::sink.GetFree()) {
+		while (source.GetDataLength() >= std::max(coeffs_size, decimate) && Entity<T>::buffer.GetFree()) {
 			T sum = 0;
 			for (std::size_t k = 0; k < coeffs_size; k++) {
 				std::size_t src_idx = source.GetTailIndex() + coeffs_size - (k + 1);
@@ -718,8 +718,8 @@ public:
 			}
 			source.MoveTailIndex(decimate);
 
-			Entity<T>::sink.GetHead() = sum;
-			Entity<T>::sink.MoveHeadIndex(1);
+			Entity<T>::buffer.GetHead() = sum;
+			Entity<T>::buffer.MoveHeadIndex(1);
 			count++;
 		}
 		return count;
@@ -732,17 +732,17 @@ private:
 class FM_Demodulator : public Entity<double> {
 public:
 	FM_Demodulator() = delete;
-	FM_Demodulator(uint32_t sampling_rate, uint32_t bandwidth = MHZ(0.2), std::size_t sink_length = SAMPLES) : Entity(sink_length), sampling_rate(sampling_rate), bandwidth(bandwidth) { }
+	FM_Demodulator(uint32_t sampling_rate, uint32_t bandwidth = MHZ(0.2), std::size_t buffer_length = SAMPLES) : Entity(buffer_length), sampling_rate(sampling_rate), bandwidth(bandwidth) { }
 	std::size_t Process(RingBuffer<std::complex<double>> &source) {
 		std::size_t count = 0;
-		while ((source.GetDataLength() >= 2) && sink.GetFree()) {
+		while ((source.GetDataLength() >= 2) && buffer.GetFree()) {
 			std::complex<double> *s1 = &source[source.GetTailIndex()],
 				*s2 = &source[source.GetTailIndex() + 1];
 			source.MoveTailIndex(1);
 
 			double diff = std::arg((*s2) * std::conj(*s1));
-			sink.GetHead() = diff * sampling_rate / (2. * M_PI * static_cast<double>(bandwidth >> 1));
-			sink.MoveHeadIndex(1);
+			buffer.GetHead() = diff * sampling_rate / (2. * M_PI * static_cast<double>(bandwidth >> 1));
+			buffer.MoveHeadIndex(1);
 			count++;
 		}
 		return count;
@@ -754,18 +754,18 @@ private:
 class Deemphasis : public Entity<double> {
 public:
 	Deemphasis() = delete;
-	Deemphasis(uint32_t sampling_rate, double tau, std::size_t sink_length = SAMPLES) : Entity(sink_length), prev(0.) {
+	Deemphasis(uint32_t sampling_rate, double tau, std::size_t buffer_length = SAMPLES) : Entity(buffer_length), prev(0.) {
 		double T = 1. / static_cast<double>(sampling_rate);
 		alpha = T / (tau + T);
 	}
 	std::size_t Process(RingBuffer<double> &source) {
 		std::size_t count = 0;
-		while (source.GetDataLength() && sink.GetFree()) {
+		while (source.GetDataLength() && buffer.GetFree()) {
 			prev = alpha * source.GetTail() + (1. - alpha) * prev;
 			source.MoveTailIndex(1);
 
-			sink.GetHead() = prev;
-			sink.MoveHeadIndex(1);
+			buffer.GetHead() = prev;
+			buffer.MoveHeadIndex(1);
 			count++;
 		}
 		return count;
@@ -827,13 +827,13 @@ int main(int argc, char** argv) {
 
 		while (!stop) {
 			radio.Poll();
-			lowpass.Process(radio.GetSinkBuffer());
-			demod.Process(lowpass.GetSinkBuffer());
-			audio_lowpass.Process(demod.GetSinkBuffer());
-			deemp.Process(audio_lowpass.GetSinkBuffer());
+			lowpass.Process(radio.GetBuffer());
+			demod.Process(lowpass.GetBuffer());
+			audio_lowpass.Process(demod.GetBuffer());
+			deemp.Process(audio_lowpass.GetBuffer());
 			if (!speaker.GetError().empty())
 				throw std::runtime_error(speaker.GetError());
-			speaker.Consume(deemp.GetSinkBuffer(), AUDIO_SAMPLE_BITS);
+			speaker.Consume(deemp.GetBuffer(), AUDIO_SAMPLE_BITS);
 		}
 	} catch (std::exception &error) {
 		std::cerr << error.what() << std::endl;
