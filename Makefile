@@ -13,11 +13,14 @@ else
 	CXXFLAGS += -DRTLSDR
 endif
 
-all: $(OBJS)
+.PHONY: clean
+
+fm_rx: $(OBJS)
 	$(LD) -o fm_rx $(OBJS) $(LIBS)
 
-fm_rx.o: fm_rx.cpp
-	$(CXX) $(CXXFLAGS) -c fm_rx.cpp
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $<
 
 clean:
 	rm *.o
+
