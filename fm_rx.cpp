@@ -16,6 +16,7 @@
 #include <alsa/asoundlib.h>
 #include <iostream>
 
+#define KHZ(x) (static_cast<long long>(x * 1000. + .5))
 #define MHZ(x) (static_cast<long long>(x * 1000000. + .5))
 #define GHZ(x) (static_cast<long long>(x * 1000000000. + .5))
 
@@ -25,7 +26,7 @@
 #define ALSA_PERIOD_DURATION_MS 50
 #define ALSA_BUFFER_PERIODS 8
 
-#define SAMPLE_FREQ MHZ(2.4)
+#define SAMPLING_FREQ MHZ(2.4)
 #define LO_FREQ MHZ(107.5)
 #define BANDWIDTH MHZ(0.2)
 #ifndef RTLSDR
@@ -36,162 +37,6 @@
 #define SAMPLE_DEC 10
 
 #define ARRAY_LENGTH(_x) (sizeof(_x) / sizeof((_x)[0]))
-
-/* Low-pass filter, sampling_rate=2.4Mhz, cutoff_freq=120KHz */
-const double lowpass_filter_coeffs[] = {
-	-0.000223854182109267,
-	-0.0006530797808749944,
-	-0.0014941215383466283,
-	-0.0028858221720252553,
-	-0.004939404951176689,
-	-0.007678669234947854,
-	-0.010987644582794564,
-	-0.014568399764957963,
-	-0.017922319870453916,
-	-0.020365792279901658,
-	-0.021087878575380557,
-	-0.019248725532304778,
-	-0.014108795801050799,
-	-0.005171436654364181,
-	0.007686147286712376,
-	0.024119811655711768,
-	0.04328522669936062,
-	0.0638792409270898,
-	0.08425813671386242,
-	0.10262004701468502,
-	0.11722685655701257,
-	0.12663226918946516,
-	0.12987901196541202,
-	0.12663226918946516,
-	0.11722685655701257,
-	0.10262004701468502,
-	0.08425813671386242,
-	0.0638792409270898,
-	0.04328522669936062,
-	0.024119811655711768,
-	0.007686147286712376,
-	-0.005171436654364181,
-	-0.014108795801050799,
-	-0.019248725532304778,
-	-0.021087878575380557,
-	-0.020365792279901658,
-	-0.017922319870453916,
-	-0.014568399764957963,
-	-0.010987644582794564,
-	-0.007678669234947854,
-	-0.004939404951176689,
-	-0.0028858221720252553,
-	-0.0014941215383466283,
-	-0.0006530797808749944,
-	-0.000223854182109267,
-};
-
-/* Audio low-pass filter, sampling_rate=240KHz, cutoff_freq=15KHz */
-const double audio_filter_coeffs[] {
-	-0.00011443124614532072,
-	-0.00017293152659996134,
-	-0.0002537395679807246,
-	-0.0002960101735381139,
-	-0.00023955416024513902,
-	-0.0000054285579679235705,
-	0.0004964100334208889,
-	0.0013538842757352097,
-	0.0026349189106053485,
-	0.004366935754078049,
-	0.006517516169727653,
-	0.00897952475800637,
-	0.011566379161820748,
-	0.01401887640845156,
-	0.016028053953956276,
-	0.017270887068045446,
-	0.017457514231803247,
-	0.016383318729148093,
-	0.01397710066219987,
-	0.010337169842383672,
-	0.0057462823234805125,
-	0.000658901918469194,
-	-0.004341600521753473,
-	-0.00861313183142416,
-	-0.011545791615272886,
-	-0.01266054361785775,
-	-0.011700549440184652,
-	-0.008698639621449431,
-	-0.0040066848458185445,
-	0.0017231736027468237,
-	0.007608807120061617,
-	0.012654244324838257,
-	0.015898391911283113,
-	0.016575938784746416,
-	0.014265883702009357,
-	0.009002241493722198,
-	0.001325586224736748,
-	-0.007739007276591902,
-	-0.016781083407689842,
-	-0.024172675639704693,
-	-0.02828537119270258,
-	-0.027727506101181958,
-	-0.021567334814263428,
-	-0.009507700677949066,
-	0.008016566866991289,
-	0.029837644916330886,
-	0.05415546347475942,
-	0.07873072365599945,
-	0.1011464475013563,
-	0.11910360136213313,
-	0.13071022495045487,
-	0.1347234472749074,
-	0.13071022495045487,
-	0.11910360136213313,
-	0.1011464475013563,
-	0.07873072365599945,
-	0.05415546347475942,
-	0.029837644916330886,
-	0.008016566866991289,
-	-0.009507700677949066,
-	-0.021567334814263428,
-	-0.027727506101181958,
-	-0.02828537119270258,
-	-0.024172675639704693,
-	-0.016781083407689842,
-	-0.007739007276591902,
-	0.001325586224736748,
-	0.009002241493722198,
-	0.014265883702009357,
-	0.016575938784746416,
-	0.015898391911283113,
-	0.012654244324838257,
-	0.007608807120061617,
-	0.0017231736027468237,
-	-0.0040066848458185445,
-	-0.008698639621449431,
-	-0.011700549440184652,
-	-0.01266054361785775,
-	-0.011545791615272886,
-	-0.00861313183142416,
-	-0.004341600521753473,
-	0.000658901918469194,
-	0.0057462823234805125,
-	0.010337169842383672,
-	0.01397710066219987,
-	0.016383318729148093,
-	0.017457514231803247,
-	0.017270887068045446,
-	0.016028053953956276,
-	0.01401887640845156,
-	0.011566379161820748,
-	0.00897952475800637,
-	0.006517516169727653,
-	0.004366935754078049,
-	0.0026349189106053485,
-	0.0013538842757352097,
-	0.0004964100334208889,
-	-0.0000054285579679235705,
-	-0.00023955416024513902,
-	-0.0002960101735381139,
-	-0.0002537395679807246,
-	-0.00017293152659996134,
-	-0.00011443124614532072,
-};
 
 template <typename T>
 class RingBuffer {
@@ -206,7 +51,7 @@ public:
 		this->tail = source.tail;
 		this->data_length = source.data_length;
 		this->data = new T[length];
-		std::memcpy(this->data, source.data, this->length);
+		std::memcpy(this->data, source.data, this->length * sizeof(T));
 	}
 	RingBuffer &operator=(const RingBuffer &source) {
 		delete [] data;
@@ -215,7 +60,7 @@ public:
 		this->tail = source.tail;
 		this->data_length = source.data_length;
 		this->data = new T[length];
-		std::memcpy(this->data, source.data, this->length);
+		std::memcpy(this->data, source.data, this->length * sizeof(T));
 		return *this;
 	}
 	virtual ~RingBuffer() {
@@ -322,7 +167,7 @@ public:
 		if (iio_channel_attr_write_longlong(chan, "rf_bandwidth", BANDWIDTH) < 0)
 			goto close_ctx;
 
-		if (iio_channel_attr_write_longlong(chan, "sampling_frequency", SAMPLE_FREQ) < 0)
+		if (iio_channel_attr_write_longlong(chan, "sampling_frequency", SAMPLING_FREQ) < 0)
 			goto close_ctx;
 
 		if (iio_channel_attr_write(chan, "gain_control_mode", "fast_attack") < 0)
@@ -387,7 +232,7 @@ close_ctx:
 		if (rtlsdr_set_tuner_bandwidth(dev, BANDWIDTH) < 0)
 			goto close_dev;
 
-		if (rtlsdr_set_sample_rate(dev, SAMPLE_FREQ) < 0)
+		if (rtlsdr_set_sample_rate(dev, SAMPLING_FREQ) < 0)
 			goto close_dev;
 
 		if (rtlsdr_set_center_freq(dev, freq) < 0)
@@ -707,13 +552,13 @@ template <typename T>
 class FIR_Filter : public Entity<T> {
 public:
 	FIR_Filter() = delete;
-	FIR_Filter(const double coefficients[], std::size_t coeffs_size, std::size_t decimate = 1, std::size_t buffer_length = SAMPLES) : Entity<T>(buffer_length), coefficients(coefficients), coeffs_size(coeffs_size), decimate(decimate) { }
+	FIR_Filter(double coefficients[], std::size_t length, std::size_t decimate = 1, std::size_t buffer_length = SAMPLES) : Entity<T>(buffer_length), coefficients(coefficients), length(length), decimate(decimate) { }
 	std::size_t Process(RingBuffer<T> &source) {
 		std::size_t count = 0;
-		while (source.GetDataLength() >= std::max(coeffs_size, decimate) && Entity<T>::buffer.GetFree()) {
+		while (source.GetDataLength() >= std::max(length, decimate) && Entity<T>::buffer.GetFree()) {
 			T sum = 0;
-			for (std::size_t k = 0; k < coeffs_size; k++) {
-				std::size_t src_idx = source.GetTailIndex() + coeffs_size - (k + 1);
+			for (std::size_t k = 0; k < length; k++) {
+				std::size_t src_idx = source.GetTailIndex() + length - (k + 1);
 				sum += source[src_idx] * coefficients[k];
 			}
 			source.MoveTailIndex(decimate);
@@ -724,15 +569,48 @@ public:
 		}
 		return count;
 	}
-private:
-	const double *coefficients;
-	std::size_t coeffs_size, decimate;
+protected:
+	double *coefficients;
+	std::size_t length, decimate;
+};
+
+template <typename T>
+class LP_FIR_Filter : public FIR_Filter<T> {
+public:
+	LP_FIR_Filter(double sampling_freq, double cutoff_freq, std::size_t length, std::size_t decimate = 1, std::size_t buffer_length = SAMPLES) : FIR_Filter<T>(nullptr, 0, decimate, buffer_length) {
+		if (length % 2 == 0)
+			throw std::invalid_argument("Filter length must be odd");
+
+		FIR_Filter<T>::length = length;
+		FIR_Filter<T>::coefficients = new double[length];
+
+		double fc = cutoff_freq / sampling_freq,
+			sum = 0.;
+		for (std::size_t i = 0; i < length; i++) {
+			double window = 0.54 - 0.46 * cos(2.0 * M_PI * i / (length - 1));
+			long long center = static_cast<long long>((length - 1) >> 1),
+				n = static_cast<long long>(i) - center;
+			FIR_Filter<T>::coefficients[i] = (n) ?
+				2. * fc * sin(2. * M_PI * fc * static_cast<double>(n)) / (2. * M_PI * fc * static_cast<double>(n)) : 
+				2. * fc;
+			FIR_Filter<T>::coefficients[i] *= window;
+		}
+
+		for (std::size_t i = 0; i < length; i++)
+			sum += FIR_Filter<T>::coefficients[i];
+
+		for (std::size_t i = 0; i < length; i++)
+			FIR_Filter<T>::coefficients[i] /= sum;
+	}
+	virtual ~LP_FIR_Filter() {
+		delete[] FIR_Filter<T>::coefficients;
+	}
 };
 
 class FM_Demodulator : public Entity<double> {
 public:
 	FM_Demodulator() = delete;
-	FM_Demodulator(uint32_t sampling_rate, uint32_t bandwidth = MHZ(0.2), std::size_t buffer_length = SAMPLES) : Entity(buffer_length), sampling_rate(sampling_rate), bandwidth(bandwidth) { }
+	FM_Demodulator(uint32_t sampling_freq, uint32_t bandwidth = MHZ(0.2), std::size_t buffer_length = SAMPLES) : Entity(buffer_length), sampling_freq(sampling_freq), bandwidth(bandwidth) { }
 	std::size_t Process(RingBuffer<std::complex<double>> &source) {
 		std::size_t count = 0;
 		while ((source.GetDataLength() >= 2) && buffer.GetFree()) {
@@ -741,14 +619,14 @@ public:
 			source.MoveTailIndex(1);
 
 			double diff = std::arg((*s2) * std::conj(*s1));
-			buffer.GetHead() = diff * sampling_rate / (2. * M_PI * static_cast<double>(bandwidth >> 1));
+			buffer.GetHead() = diff * sampling_freq / (2. * M_PI * static_cast<double>(bandwidth >> 1));
 			buffer.MoveHeadIndex(1);
 			count++;
 		}
 		return count;
 	}
 private:
-	uint32_t sampling_rate, bandwidth;
+	uint32_t sampling_freq, bandwidth;
 };
 
 class Deemphasis : public Entity<double> {
@@ -808,16 +686,18 @@ int main(int argc, char** argv) {
     std::signal(SIGTERM, SignalHandler);
 
 	try {
-		if (SAMPLE_FREQ % (AUDIO_SAMPLE_RATE * SAMPLE_DEC))
+		if (SAMPLING_FREQ % (AUDIO_SAMPLE_RATE * SAMPLE_DEC))
 			throw std::runtime_error("Invalid audio sampling rate");
 
 		SDR_RX radio(uri, freq);
 
-		FIR_Filter<std::complex<double>> lowpass(lowpass_filter_coeffs, ARRAY_LENGTH(lowpass_filter_coeffs), SAMPLE_DEC);
+		/* Low-pass filter, cutoff_freq=120KHz */
+		LP_FIR_Filter<std::complex<double>> lowpass(SAMPLING_FREQ, KHZ(120.), 45, SAMPLE_DEC);
 
-		FM_Demodulator demod(SAMPLE_FREQ / SAMPLE_DEC, BANDWIDTH);
+		FM_Demodulator demod(SAMPLING_FREQ / SAMPLE_DEC, BANDWIDTH);
 
-		FIR_Filter<double> audio_lowpass(audio_filter_coeffs, ARRAY_LENGTH(audio_filter_coeffs), SAMPLE_FREQ / (AUDIO_SAMPLE_RATE * SAMPLE_DEC));
+		/* Audio low-pass filter, cutoff_freq=15KHz */
+		LP_FIR_Filter<double> audio_lowpass(SAMPLING_FREQ / SAMPLE_DEC, KHZ(15.), 103, SAMPLING_FREQ / (AUDIO_SAMPLE_RATE * SAMPLE_DEC));
 
 		/* tau=50us */
 		Deemphasis deemp(AUDIO_SAMPLE_RATE, 50. / 1000000.);
