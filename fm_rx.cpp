@@ -325,18 +325,16 @@ public:
 	}
 	Speaker &operator=(const Speaker &) = delete;
 	void Enable(const std::string &device, uint32_t sampling_rate, uint8_t channels, uint8_t channel_bits) {
-		std::unique_lock<std::mutex> lock(access);
+		std::lock_guard<std::mutex> lock(access);
 
 		if (enabled)
 			return;
 
 		enabled = true;
-		lock.unlock();
 
 		try {
 			thread = std::thread(&Speaker::Thread, this, device, sampling_rate, channels, channel_bits);
 		} catch (...) {
-			lock.lock();
 			enabled = false;
 			throw;
 		}

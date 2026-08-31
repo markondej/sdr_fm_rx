@@ -1,0 +1,1 @@
+option('rtlsdr', type: 'boolean', value: false, description: 'Build for RTL-SDR')
