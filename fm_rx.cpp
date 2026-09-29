@@ -340,11 +340,17 @@ public:
 		}
 	}
 	bool Disable() {
-		std::unique_lock<std::mutex> lock(access);
-		if (thread.joinable() && enabled) {
+		std::thread disabled;
+		auto disable = [&]() -> bool {
+			std::lock_guard<std::mutex> lock(access);
+			if (!enabled)
+				return false;
+			disabled = std::move(thread);
 			enabled = false;
-			lock.unlock();
-			thread.join();
+			return true;
+		};
+		if (disable() && disabled.joinable()) {
+			disabled.join();
 			return true;
 		}
 		return false;
